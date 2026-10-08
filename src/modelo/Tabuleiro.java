@@ -1,5 +1,6 @@
 package modelo;
 
+import excecao.ExplosaoException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -23,12 +24,16 @@ public class Tabuleiro {
     }
 
     public void abrirCampo(int linha, int coluna){
+        try{
         Predicate<Campo> linhaEColuna = lc -> lc.getLinha() == linha && lc.getColuna() == coluna;
-
         campos.stream()
               .filter(linhaEColuna)
               .findFirst()
               .ifPresent(lc -> lc.abrir());
+        }catch (ExplosaoException e){
+            campos.forEach(c -> c.setAberto(true));
+            throw e;
+        }   
     }
 
     public void marcarCampo(int linha, int coluna){
@@ -77,7 +82,7 @@ public class Tabuleiro {
         long minasArmadas = 0;
         Predicate<Campo> minado = c -> c.isMinado();
 
-        while(minasArmadas < minas){
+        do{
             int valorAleatorio = (int) (Math.random() * campos.size());
             campos.get(valorAleatorio).minar();
             
@@ -85,7 +90,7 @@ public class Tabuleiro {
                                  .filter(minado)
                                  .count();
             
-        }
+        } while(minasArmadas < minas);
     }
 
     public boolean objetivoAlcancado(){
@@ -100,8 +105,19 @@ public class Tabuleiro {
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
+        sb.append("  ");
+        for (int c = 0; c < colunas; c++) {
+            sb.append(" ");
+            sb.append(c);
+            sb.append(" ");
+        }
+
+        sb.append("\n");
+
         int i = 0;
         for (int l = 0; l < linhas; l++) {
+            sb.append(l);
+            sb.append(" ");
             for (int c = 0; c < colunas; c++) {
                 sb.append(" ");
                 sb.append(campos.get(i));
